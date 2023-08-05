@@ -1,0 +1,60 @@
+$ su - root
+$ sudo apt install -y postgresql postgresql-contrib
+$ sudo service postgresql start
+$ sudo -i postgres
+$ psql
+
+postgres=# create user manager password 'manager' superuser;
+postgres=# \du
+                                      List of roles
+    Role name |                         Attributes                         | Member of 
+    -----------+------------------------------------------------------------+-----------
+    manager   | Superuser                                                  | {}
+    postgres  | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+
+postgres=# create database dvm_db owner manager;
+postgres=# \l
+                                      List of databases
+    Name    |  Owner   | Encoding |   Collate   |    Ctype    |   Access privileges   
+    -----------+----------+----------+-------------+-------------+-----------------------
+    dvm_db    | manager  | UTF8     | en_US.UTF-8 | en_US.UTF-8 | 
+    postgres  | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | 
+    template0 | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgres          +
+              |          |          |             |             | postgres=CTc/postgres
+    template1 | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgres          +
+              |          |          |             |             | postgres=CTc/postgres
+    (4 rows)
+postgres=# \q
+
+$ psql -U manager -d dvm_db
+    psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  Peer authentication failed for user "manager"
+
+$ exit
+$ adduser manager
+$ vi /etc/postgresql/14/main/postgresql.conf        # 수정
+    listen_addresses = '*'
+$ vi /etc/postgresql/14/main/pg_hba.conf            # ADDRESS 수정
+    # "local" is for Unix domain socket connections only
+    local   all             all                                     md5                 # adduser manager 안하고 싶으면 peer => md5로 수정
+    # IPv4 local connections:
+    host    all             all             0.0.0.0/0            scram-sha-256          # 외부 접속 허용
+$ sudo service postgresql restart
+$ su - manager
+$ psql -U manager -d dvm_db
+postgres=# \q
+
+$ psql -U manager -d dvm_db --file postgresql_init_table.sql
+$ psql -U manager -d dvm_db --file postgresql_insert_dummy_data.sql
+$ psql -U manager -d dvm_db
+dvm_db=# \dt
+                    List of relations
+    Schema |         Name          | Type  |  Owner
+    --------+-----------------------+-------+---------
+    public | customer              | table | manager
+    public | deployment            | table | manager
+    public | deployment_module_map | table | manager
+    public | deployment_os_map     | table | manager
+    public | module                | table | manager
+    public | os                    | table | manager
+    public | revision              | table | manager
+    public | version               | table | manager

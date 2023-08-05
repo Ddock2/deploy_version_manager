@@ -1,0 +1,27 @@
+###
+POST http://127.0.0.1:8000/items
+content-type: application/json
+
+{
+    "name" : "sample",
+    "description" : "",
+    "price" : 123,
+    "on_offer" : true
+}
+
+###
+POST http://127.0.0.1:8000/items
+content-type: application/json
+
+{
+    "name" : "sample",
+    "price" : 123
+}
+
+###
+POST http://127.0.0.1:8000/items
+content-type: application/json
+
+{
+    "name" : "sample"
+}
